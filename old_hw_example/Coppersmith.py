@@ -54,7 +54,7 @@ def encrypt(rsakey,s):
   256 bits of a key of size 2048 bits, and it is less than N^(1/3). Thus coppersmith's
   method should ideally work. Additionally, as Nadia's math shows, her lattice of
   dimension 4 works for essentially any m which is less has less than 1/6 of the
-  bits of N, such as the m in question. 
+  bits of N, such as the m in question.
 
   I first parse the rsa encrypted aes key, and given the padding at the beginning
   of the key's plaintext, I can use the ciphertext and partially known plaintext
@@ -96,15 +96,17 @@ M = 2**256
 N = pubkey.n
 
 # Create matrix as described in Nadia's lecture notes. Slides 23, last page
-L = matrix(ZZ, 4, 4, [pow(M, 3), f2*pow(M, 2), f1*M, f0,
-                              0,  N*pow(M, 2),    0,  0,
-                              0,            0,  N*M,  0,
-                              0,            0,    0,  N])
+L = matrix(ZZ, 4, 4, [pow(M, 3), f2*pow(M, 2), f1*M, f0,    # f(x)
+                              0,  N*pow(M, 2),    0,  0,    # N*x^2
+                              0,            0,  N*M,  0,    # N*x
+                              0,            0,    0,  N])   # N
 B = L.LLL()
 x = PolynomialRing(RationalField(), 'x').gen()
 
 f = sum(B[0][3-i] * x**i / M**i for i in range(4))
-m = f.roots()[0][0]
+roots = f.roots()
+m = roots[0][0]
+print m
 
 # Having computed m, decrypt the pdf file
 aeskey = int_to_binary(m)
