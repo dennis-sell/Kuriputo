@@ -9,11 +9,12 @@ from Crypto import Random
 from operator import mul
 
 def satisfies_conditions(N, beta, bounds):
-    m = float(len(bounds))
+    m = len(bounds)
     geo_average_noise = reduce(mul, bounds, 1) ** (1.0 / m)
-    beta_bound = beta > 1 / sqrt(log(N, 2))
-    noise_bound = geo_average_noise < pow(N, pow(beta, m+1/m))
-    return bool(beta_bound) and bool(noise_bound)
+
+    beta_bound = bool(beta > 1 / log(N, 2) ** (1/2))
+    noise_bound = bool(geo_average_noise < pow(N, pow(beta, m+1/m)))
+    return beta_bound and noise_bound
 
 
 def simple_howgrave_graham(N, a1, X1):
@@ -61,16 +62,16 @@ def howgrave_graham(N, a1, X1, k, t):
     return f, B
 
 
-p = 1031
-q = 479
-q1 = 373
-r1 = -13
+p = 10313213783924
+q =  4793213432432
+q1 = 3732132143232
+r1 = -1323
 
-X1 = 16
+X1 = 2000
 N = p * q
 a1 = q1 * p + r1
 
-print satisfies_conditions(N, log(p, N), [X1])
+#print satisfies_conditions(N, log(p, N), [X1])
 fs, Bs = simple_howgrave_graham(N, a1, X1)
 
 
