@@ -8,15 +8,6 @@ from Crypto.Cipher import AES
 from Crypto import Random
 from operator import mul
 
-p = 131
-q = 41
-q1 = 37
-r1 = 5
-X1 = 8
-
-N = p * q
-a1 = q1 * p + r1
-
 def satisfies_conditions(N, beta, bounds):
     m = float(len(bounds))
     geo_average_noise = reduce(mul, bounds, 1) ** (1.0 / m)
@@ -26,55 +17,63 @@ def satisfies_conditions(N, beta, bounds):
 
 
 def simple_howgrave_graham(N, a1, X1):
-    L = matrix(ZZ, 2, 2,
-                  [[ -1*X1, a1],
-                   [    0,  N]])
+    dim = 2
+    L = matrix(ZZ, dim, dim,
+                  [[-1*a1, X1],
+                   [    N,  0]] )
     B = L.LLL()
 
     x = PolynomialRing(RationalField(), 'x').gen()
-    f = sum(B[0][1-i] * x**i / float(X1)**i for i in range(2))
-    m = f.roots()
-    # How to get to a value of r?
-    return m[0][0]
+    f = sum(B[0][i] * x**i / X1**i for i in range(dim))
+    return f, B
 
 
-def make_hg_rows(N, a, x, k, t):
+def make_hg_rows(N, a, X, k, t, matrix_form=False):
     L = []
-    for i in range(t):
+    for i in range(t+1):
         current_row = []
 
-        for j in range(t):
-            coefficient = binomial(i, j) * pow(-1 * a1, i-j) * pow(X1, j)
+        for j in range(t+1):
+            coefficient = binomial(i, j) * pow(-1 * a, i-j) * pow(X, j)
             coefficient *= pow(N, k-i) if i <= k else 1 # might be < k
-            current_row.insert(0, coefficient)
+            current_row.append(coefficient)
         L.append(current_row)
+
+    if matrix_form:
+        return matrix(L)
     return L
 
+"""
+To get formula
 
-def howgrave_graham_formula(k, t):
-    var("a,X,N")
-    L = make_hg_rows(N, a, X, k, t)
-    L = matrix(t, t, L)
-    return L
-
+R.<N,a,x> = PolynomialRing(QQ, 3)
+matrix_formula = ACD.make_hg_rows(N,a,x, <k>, <t>, matrix_form=True)
+"""
 
 def howgrave_graham(N, a1, X1, k, t):
     print "Howgrave graham for k=%i, t=%i" % (k,t)
-    L = make_hg_rows(N, a1, X1, k, t)
-    L = matrix(ZZ, t, t, L)
-    print L
-
+    rows = make_hg_rows(N, a1, X1, k, t)
+    L = matrix(ZZ, t+1, t+1, rows)
     B = L.LLL()
-    print B
-    x = PolynomialRing(RationalField(), 'x').gen()
-    f = sum(B[0][1-i] * x**i / float(X1)**i for i in range(2))
-    return f.roots()
 
+    x = PolynomialRing(RationalField(), 'x').gen()
+    f = sum(B[0][i] * (x**i) / (X1**i) for i in range(t+1))
+    return f, B
+
+
+p = 1031
+q = 479
+q1 = 373
+r1 = -13
+
+X1 = 16
+N = p * q
+a1 = q1 * p + r1
 
 print satisfies_conditions(N, log(p, N), [X1])
-r = simple_howgrave_graham(N, a1, X1)
+fs, Bs = simple_howgrave_graham(N, a1, X1)
 
 
 #print howgrave_graham_formula(2, 3)
-print howgrave_graham(N, a1, X1, 2, 3)
+f, B = howgrave_graham(N, a1, X1, 2, 3)
 
