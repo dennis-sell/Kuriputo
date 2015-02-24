@@ -35,7 +35,8 @@ class gcd_solver:
         dim = len(indices)
         functions = f_list + [self.n]#+ZZ.random_element(-2**self.lenr,2**self.lenr)]
         pindex = [prod(map(operator.pow,functions,exponents)) for exponents in indices]
-        monomial_list = [prod(map(operator.pow,variables,exponents[:-1])) for exponents in indices]
+        monomial_list = [prod(map(operator.pow,variables,exponents[:-1]))
+                for exponents in indices]
 
         A = MatrixSpace(IntegerRing(),dim,dim)(0)
         for i in range(dim):
@@ -43,7 +44,8 @@ class gcd_solver:
                 A[i,j] = pindex[i].monomial_coefficient(monomial_list[j])
 
         def getf(M,i):
-            return sum(self.R(b/X**monomial.degree())*monomial for b,monomial in zip(M[i],monomial_list))
+            return sum(self.R(b/X**monomial.degree())*monomial
+                    for b,monomial in zip(M[i],monomial_list))
 
 #        print "dimension:", dim
         return A,getf
@@ -69,11 +71,15 @@ class gcd_solver:
 #        X = 2**self.lenr
 #        dim = B.nrows()
 #        det = X**(self.m*dim*t/(self.m+1))*self.n**(binomial(k+self.m,self.m)*k/(self.m+1))
-#        print "approximation factor of 1st vector:", RR((l2(0)/(det**(1/(dim))))**(1/dim))
-#        print "approximation factor of mth vector:", RR((l2(self.m-1)/(det**(1/(dim))))**(1/dim))
-#        print "approximation factor of dim-1th vector:", RR((l2(dim-1)/(det**(1/(dim))))**(1/dim))
+#        print "approximation factor of 1st vector:",
+#                   RR((l2(0)/(det**(1/(dim))))**(1/dim))
+#        print "approximation factor of mth vector:",
+#                   RR((l2(self.m-1)/(det**(1/(dim))))**(1/dim))
+#        print "approximation factor of dim-1th vector:",
+#                   RR((l2(dim-1)/(det**(1/(dim))))**(1/dim))
         if any([apply(getf(B,i),self.r_list) for i in range(self.m)]):
-            print "Failed: Polynomials do not vanish at roots."#, [apply(getf(B,i),self.r_list) for i in range(self.m)]
+            print "Failed: Polynomials do not vanish at roots."
+            #, [apply(getf(B,i),self.r_list) for i in range(self.m)]
             return False
         return True
 
