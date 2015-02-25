@@ -109,73 +109,93 @@ class ACD_solver:
 #        print "Found", root_count, "correct roots."
 
 
-def satisfies_conditions(N, beta, bounds):
-    m = len(bounds)
-    geo_average_noise = prod(bounds) ** (1.0 / m)
 
-    beta_bound = bool(beta > 1 / log(N, 2) ** (1/2))
-    noise_bound = bool(geo_average_noise < pow(N, pow(beta, m+1/m)))
-    return beta_bound and noise_bound
+class univariate_acd_solver:
 
+    def __init__(self, lenn, lenp, lenr):
+        self.lenn = lenn
+        self.lenp = lenp
+        self.lenr = lenr
 
-def simple_howgrave_graham(N, a1, X1):
-    dim = 2
-    L = matrix(ZZ, dim, dim,
-                  [[-1*a1, X1],
-                   [    N,  0]] )
-    B = L.LLL()
+        lenq = lenn - lenp
 
-    x = PolynomialRing(RationalField(), 'x').gen()
-    f = sum(B[0][i] * x**i / X1**i for i in range(dim))
-    return f, B
+        self.p = ZZ.random_element(2**(lenp-1), 2**lenp)
+        self.q = ZZ.random_element(2**(lenq-1), 2**lenq)
+        self.q1 = ZZ.random_element(2**(lenq-1), 2**lenq)
+        self.r = ZZ.random_element(-2**lenr, 2**lenr)
 
+        self.X = 2**lenr
+        self.a1 = self.p * self.q1 + self.r
+        self.N = self.p * self.q
 
-def make_hg_rows(N, a, X, k, t, matrix_form=False):
-    L = []
-    for i in range(t+1):
-        current_row = []
+    def satisfies_conditions(self, N, beta, bounds):
+        m = len(bounds)
+        geo_average_noise = prod(bounds) ** (1.0 / m)
 
-        for j in range(t+1):
-            coefficient = binomial(i, j) * pow(-1 * a, i-j) * pow(X, j)
-            coefficient *= pow(N, k-i) if i <= k else 1 # might be < k
-            current_row.append(coefficient)
-        L.append(current_row)
-
-    if matrix_form:
-        return matrix(L)
-    return L
-
-"""
-To get formula
-
-R.<N,a,x> = PolynomialRing(QQ, 3)
-matrix_formula = ACD.make_hg_rows(N,a,x, <k>, <t>, matrix_form=True)
-"""
-
-def howgrave_graham(N, a1, X1, k, t):
-    print "Howgrave graham for k=%i, t=%i" % (k,t)
-    rows = make_hg_rows(N, a1, X1, k, t)
-    L = matrix(ZZ, t+1, t+1, rows)
-    B = L.LLL()
-
-    x = PolynomialRing(RationalField(), 'x').gen()
-    f = sum(B[0][i] * (x**i) / (X1**i) for i in range(t+1))
-    return f, B
+        beta_bound = bool(beta > 1 / log(N, 2) ** (1/2))
+        noise_bound = bool(geo_average_noise < pow(N, pow(beta, m+1/m)))
+        return beta_bound and noise_bound
 
 
-p = 10313213783923
-q =  4793213432437
-q1 = 3732132143239
-r1 = -1323
+    def simple_howgrave_graham(self):
+        a1 = self.a1; X = self.X; N = self.N;
+        dim = 2
+        L = matrix(ZZ, dim, dim,
+                      [[-1*a1, X],
+                       [    N, 0]] )
+        B = L.LLL()
 
-X1 = 2000
-N = p * q
-a1 = q1 * p + r1
-
-#print satisfies_conditions(N, log(p, N), [X1])
-fs, Bs = simple_howgrave_graham(N, a1, X1)
+        x = PolynomialRing(RationalField(), 'x').gen()
+        f = sum(B[0][i] * x**i / X**i for i in range(dim))
+        return f, B
 
 
-#print howgrave_graham_formula(2, 3)
-f, B = howgrave_graham(N, a1, X1, 2, 3)
+    def make_hg_rows(self, k, t, matrix_form=False):
+        a1 = self.a1; X = self.X; N = self.N;
+        L = []
+        for i in range(t+1):
+            current_row = []
 
+            for j in range(t+1):
+                coefficient = binomial(i, j) * pow(-1 * a1, i-j) * pow(X, j)
+                coefficient *= pow(N, k-i) if i <= k else 1 # might be < k
+                current_row.append(coefficient)
+            L.append(current_row)
+
+        if matrix_form:
+            return matrix(L)
+        return L
+
+    """
+    To get formula
+
+    R.<N,a,x> = PolynomialRing(QQ, 3)
+    matrix_formula = ACD.make_hg_rows(N,a,x, <k>, <t>, matrix_form=True)
+    """
+
+    def howgrave_graham(self, k, t):
+        X = self.X
+        rows = self.make_hg_rows(k, t)
+        L = matrix(ZZ, t+1, t+1, rows)
+        B = L.LLL()
+
+        x = PolynomialRing(RationalField(), 'x').gen()
+        f = sum(B[0][i] * (x**i) / (X**i) for i in range(t+1))
+        roots = f.roots()
+        return roots[0][0] if roots else None
+
+u = univariate_acd_solver(100, 65, 10)
+r = u.howgrave_graham(2, 3)
+
+
+
+def test_tk(k, t, lenn, lenp, lenr, trials):
+    successes = 0
+    for i in range(trials):
+        u = univariate_acd_solver(lenn, lenp, lenr)
+        if u.howgrave_graham(k, t) == u.r:
+            successes += 1
+    success_ratio = float(successes) / trials
+    print "success rate is %i out of %i" % (successes, trials)
+    print success_ratio
+    return success_ratio
