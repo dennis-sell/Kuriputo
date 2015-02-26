@@ -7,6 +7,8 @@ from Crypto import Random
 
 import itertools
 from operator import mul
+import time
+
 
 class ACD_solver:
     def __init__(self, m, lenn, lenp, lenr):
@@ -26,12 +28,23 @@ class ACD_solver:
         self.R = PolynomialRing(QQ,m,'x',order='lex')
 
 
+    def solve(self, t, k): # Use magma later?
+        print "Generating lattice"
+        A,getf = self.gen_lattice(t,k)
+        print "Running LLL",
+        start = time.clock()
+        B = A.LLL()
+        print time.clock()-start,
+        self.check(B, getf)
+        return B, getf
+
+
     def gen_lattice(self, t, k):
         variables = self.R.gens()
         f_list = [a - self.X * x for a, x in zip(self.a_list, variables)]
 
         indices = [list(ind) + [max(0, k - sum(ind))]
-                    for ind in itertools.product(range(t+1))
+                    for ind in itertools.product(range(t+1), repeat=self.m)
                     if sum(ind) <= t] # sum i_j <= t
 
         dim = len(indices)
@@ -39,7 +52,6 @@ class ACD_solver:
         pindex = [prod(map(operator.pow, functions, exponents)) for exponents in indices]
         monomial_list = [prod(map(operator.pow, variables, exponents[:-1]))
                             for exponents in indices]
-
 
         L = matrix(ZZ, dim, dim)
         for i in range(dim):
@@ -62,17 +74,43 @@ class ACD_solver:
         return RR((v_m_norm / (det ** (1/dim))) ** (1/dim))
 
 
-    def solve(self, t, k): # Use magma later?
-        print "Generating lattice"
-        A,getf = self.gen_lattice(t,k)
-        print "Running LLL",
-        start = time.clock()
-        B = A.LLL()
-        print time.clock()-start,
-        return B, getf
+    def find_tk(self, rangelim=20, dimlim = 200, lllfactor=log(1.01)/log(2), lenr=0):
+        t,k=0,0
+        if lenr == 0:
+            lenr = self.lenr
+        for test_k, test_t in itertools.product(range(1, rangelim), repeat=2):
+            if test_k > test_t:
+                continue
+            dim = binomial(test_t+self.m,self.m)
+            if dim > dimlim:
+                continue
+            if self.check_tk(test_t,test_k,lllfactor,verbose=False):
+                k = test_k
+                t = test_t
+                dimlim = dim
+        return t,k,dimlim
+
+    def check_tk(self, test_t, test_k, lllfactor=log(1.01)/log(2), verbose=True):
+        dim = binomial(test_t+self.m,self.m)
+        veclen = (log(dim)/(2*log(2)) +
+                  dim*lllfactor +
+                  (self.lenr*dim*test_t*self.m/(self.m+1)
+                    + self.lenn*binomial(test_k+self.m,self.m)*test_k/(self.m+1))
+                        /dim)
+        if verbose:
+            print dim, float(veclen), self.lenp*test_k, bool(veclen < self.lenp*test_k)
+        return bool(veclen < self.lenp*test_k)
 
 
-    def groebner(self, B, getf, basis_size=0):
+    """ Checks that each r is a root of the polynomial """
+    def check(self, B, getf):
+        if any([apply(getf(B, i), self.r_list) for i in range(self.m)]):
+            print "Failed: Polynomials do not vanish at roots."
+            return False
+        return True
+
+
+    def groebner(self, B, getf, basis_size=0, use_magma=False):
         if not basis_size:
             basis_size = B.ncols()-1
             """ Are we sure??? How about
@@ -80,10 +118,10 @@ class ACD_solver:
             """
         R = self.R
         algorithm = 'libsingular:groebner'
-        #if use_magma:
-        #    rp = random_prime(2**(self.lenr+2),lbound=2**(self.lenr+1))
-        #    R = PolynomialRing(GF(rp),self.m,'x',order='lex')
-        #    algorithm = 'magma:GroebnerBasis'
+        if use_magma:
+           rp = random_prime(2**(self.lenr+2),lbound=2**(self.lenr+1))
+           R = PolynomialRing(GF(rp),self.m,'x',order='lex')
+           algorithm = 'magma:GroebnerBasis'
         I = (tuple(getf(B,i) for i in range(basis_size)))*R
         #print "groebner basis:",
         start = time.clock()
@@ -106,7 +144,7 @@ class ACD_solver:
                                     root1 = root1 - rp
                         if root1 in self.r_list:
                             root_count += 1
-#        print "Found", root_count, "correct roots."
+        print "Found", root_count, "correct roots."
 
 
 
@@ -150,7 +188,7 @@ class univariate_acd_solver:
         return f, B
 
 
-    def make_hg_rows(self, k, t, matrix_form=False):
+    def make_hg_rows(self, t, k, matrix_form=False):
         a1 = self.a1; X = self.X; N = self.N;
         L = []
         for i in range(t+1):
@@ -173,9 +211,9 @@ class univariate_acd_solver:
     matrix_formula = ACD.make_hg_rows(N,a,x, <k>, <t>, matrix_form=True)
     """
 
-    def howgrave_graham(self, k, t):
+    def howgrave_graham(self, t, k):
         X = self.X
-        rows = self.make_hg_rows(k, t)
+        rows = self.make_hg_rows(t, k)
         L = matrix(ZZ, t+1, t+1, rows)
         B = L.LLL()
 
@@ -185,7 +223,7 @@ class univariate_acd_solver:
         return roots[0][0] if roots else None
 
 u = univariate_acd_solver(100, 65, 10)
-r = u.howgrave_graham(2, 3)
+r = u.howgrave_graham(3, 2)
 
 
 
