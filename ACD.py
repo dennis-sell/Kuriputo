@@ -28,6 +28,17 @@ class ACD_solver:
         self.R = PolynomialRing(QQ,m,'x',order='lex')
 
 
+    def find_roots(self):
+        t, k, dim = self.find_tk()
+        if not t and not k:
+            print "Not solvable or dimension too large"
+            return []
+        print "Lattice (t, k, dim) =", t, k, dim
+        B, getf = self.solve(t, k)
+        roots = self.groebner(B, getf)
+        return roots
+
+
     def solve(self, t, k): # Use magma later?
         print "Generating lattice"
         A,getf = self.gen_lattice(t,k)
@@ -123,12 +134,12 @@ class ACD_solver:
            R = PolynomialRing(GF(rp),self.m,'x',order='lex')
            algorithm = 'magma:GroebnerBasis'
         I = (tuple(getf(B,i) for i in range(basis_size)))*R
-        #print "groebner basis:",
+        print "groebner basis:",
         start = time.clock()
         J = I.groebner_basis(algorithm)
         print time.clock()-start
 
-        root_count = 0
+        roots = []
         for b in J:
             if len(b.variables()) == 1:
                 factorization = b.factor(proof=False)
@@ -142,9 +153,10 @@ class ACD_solver:
                             else:
                                 if root1 > 2**self.lenr:
                                     root1 = root1 - rp
-                        if root1 in self.r_list:
-                            root_count += 1
-        print "Found", root_count, "correct roots."
+                        roots.append(root1)
+        print "Found", len(roots), "correct roots."
+        print "Same as original r's", set(roots) == set(self.r_list)
+        return roots
 
 
 
