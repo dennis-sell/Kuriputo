@@ -40,8 +40,11 @@ class ACD_solver:
 
 
     def solve(self, t, k): # Use magma later?
-        print "Generating lattice"
+        print "Generating lattice",
+        start = time.clock()
         A,getf = self.gen_lattice(t,k)
+        print time.clock()-start
+
         print "Running LLL",
         start = time.clock()
         B = A.LLL()
@@ -54,10 +57,21 @@ class ACD_solver:
         variables = self.R.gens()
         f_list = [a - self.X * x for a, x in zip(self.a_list, variables)]
 
+        def gen_index():
+            if t==1:
+                for i in range(self.m+1):
+                    yield tuple([0]*(self.m-i)+[1]+[0]*i)
+            else:
+                for indices in itertools.product(range(t+1),repeat=self.m):
+                    if sum(indices) < t+1:
+                        yield tuple(list(indices)+[max(0,k-sum(indices))])
+
+        """
+        # could optimize this to not take m(t+1)^m
         indices = [list(ind) + [max(0, k - sum(ind))]
                     for ind in itertools.product(range(t+1), repeat=self.m)
-                    if sum(ind) <= t] # sum i_j <= t
-
+                    if sum(ind) <= t] # sum i_j <= t"""
+        indices = list(gen_index())
         dim = len(indices)
         functions = f_list + [self.N]
         pindex = [prod(map(operator.pow, functions, exponents)) for exponents in indices]
