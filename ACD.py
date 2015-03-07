@@ -6,7 +6,6 @@ from Crypto.Cipher import AES
 from Crypto import Random
 
 import itertools
-from operator import mul
 import time
 
 
@@ -39,18 +38,28 @@ class ACD_solver:
         return roots
 
 
-    def solve(self, t, k): # Use magma later?
+    def solve(self, t, k, use_magma=False, return_times=False):
         print "Generating lattice",
         start = time.clock()
         A,getf = self.gen_lattice(t,k)
-        print time.clock()-start
+        if use_magma:
+            A = magma(A)
+        generating_time = time.clock()-start
+        print generating_time
 
         print "Running LLL",
         start = time.clock()
         B = A.LLL()
-        print time.clock()-start
+        if use_magma:
+            B = B.sage()
+        LLL_time = time.clock()-start
+        print LLL_time
+
         if self.check(B, getf):
-            return B, getf
+            if return_times:
+                return B, getf, (generating_time, LLL_time)
+            else:
+                return B, getf
 
 
     def gen_lattice(self, t, k):
@@ -66,11 +75,6 @@ class ACD_solver:
                     if sum(indices) < t+1:
                         yield tuple(list(indices)+[max(0,k-sum(indices))])
 
-        """
-        # could optimize this to not take m(t+1)^m
-        indices = [list(ind) + [max(0, k - sum(ind))]
-                    for ind in itertools.product(range(t+1), repeat=self.m)
-                    if sum(ind) <= t] # sum i_j <= t"""
         indices = list(gen_index())
         dim = len(indices)
         functions = f_list + [self.N]
@@ -135,7 +139,7 @@ class ACD_solver:
         return True
 
 
-    def groebner(self, B, getf, basis_size=0, use_magma=False):
+    def groebner(self, B, getf, basis_size=0, use_magma=False, return_time=False):
         if not basis_size:
             basis_size = B.ncols()-1
             """ Are we sure??? How about
@@ -151,7 +155,8 @@ class ACD_solver:
         print "groebner basis:",
         start = time.clock()
         J = I.groebner_basis(algorithm)
-        print time.clock()-start
+        groebner_time = time.clock()-start
+        print groebner_time
 
         roots = []
         for b in J:
@@ -170,7 +175,11 @@ class ACD_solver:
                         roots.append(root1)
         print "Found", len(roots), "correct roots."
         print "Same as original r's", set(roots) == set(self.r_list)
-        return roots
+        if return_time:
+            return roots, groebner_time
+        else:
+            return roots
+
 
 
 class univariate_acd_solver:
