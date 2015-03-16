@@ -54,14 +54,16 @@ def run_tests():
 
     time_results = []
     for m,logn,logp,logr,t,k in tests:
-        print m, ", ", logn, ", ", logp, ", ", logr
+        print m, logn, logp, logr,
         hulk = ACD_solver(m,logn,logp,logr)
-        print t, ", ", k, ", ", binomial(t+m,m)
-        start = time()
+        print t, k, binomial(t+m,m),
         B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
                                                     use_magma=True,
                                                     return_times=True)
 
         _, gtime = hulk.groebner(B,getf, 0, use_magma=True, return_time=True)
+        print generating_time, LLL_time, gtime,
         time_results.append((generating_time, LLL_time, gtime))
     return time_results
+
+run_tests()
