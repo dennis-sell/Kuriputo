@@ -1,0 +1,22 @@
+1 1000 200 36
+41 8 42
+Generating lattice 0.02
+Running LLL 61.04
+groebner basis: 0.15
+Found 1 correct roots.
+Same as original r's True
+0.02 61.04 0.15
+
+1 1000 400 154
+40 16 41
+Generating lattice 0.02
+Running LLL 220.47
+groebner basis: 0.16
+Found 1 correct roots.
+Same as original r's True
+0.02 220.47 0.16
+
+1 1000 400 156
+82 33 83
+Generating lattice 0.22
+Running LLL
