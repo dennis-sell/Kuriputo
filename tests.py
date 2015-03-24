@@ -19,6 +19,18 @@ def test_tk(k, t, lenn, lenp, lenr, trials):
     print success_ratio
     return success_ratio
 
+def run_tests_2():
+    pass
+    # Find minimal k,t at which this will work
+    # Run that lattice
+    # Compare it to higher values.
+
+    # Question: Is it optimal for the minimal t for the minimal k for which it will work?
+
+def CLT_toy():
+    params = (10,290000,988,26)
+    acd = ACD_solver(*params)
+    acd.find_roots()
 
 def run_tests():
     tests = [
@@ -28,6 +40,7 @@ def run_tests():
 
         (2,1000,200,72,9,4),
         (2,1000,400,232,10,6),
+        (2,1999,400,238,15,9),
 
         (3,1000,200,87,5,3),
         (3,1000,400,255,4,3),
@@ -54,16 +67,18 @@ def run_tests():
 
     time_results = []
     for m,logn,logp,logr,t,k in tests:
-        print m, logn, logp, logr,
+        print m, logn, logp, logr
         hulk = ACD_solver(m,logn,logp,logr)
-        print t, k, binomial(t+m,m),
+        print t, k, binomial(t+m,m)
         B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
                                                     use_magma=True,
                                                     return_times=True)
 
         _, gtime = hulk.groebner(B,getf, 0, use_magma=True, return_time=True)
-        print generating_time, LLL_time, gtime,
+        print generating_time, LLL_time, gtime
+        print
         time_results.append((generating_time, LLL_time, gtime))
-    return time_results
+    print time_results
 
-run_tests()
+#run_tests()
+CLT_toy()

@@ -28,7 +28,7 @@ class ACD_solver:
 
 
     def find_roots(self):
-        t, k, dim = self.find_tk()
+        t, k, dim = self.find_tk(rangelim=40, dimlim=2000)
         if not t and not k:
             print "Not solvable or dimension too large"
             return []
@@ -55,11 +55,11 @@ class ACD_solver:
         LLL_time = time.clock()-start
         print LLL_time
 
-        if self.check(B, getf):
-            if return_times:
-                return B, getf, (generating_time, LLL_time)
-            else:
-                return B, getf
+        self.check(B, getf)
+        if return_times:
+            return B, getf, (generating_time, LLL_time)
+        else:
+            return B, getf
 
 
     def gen_lattice(self, t, k):
@@ -173,6 +173,7 @@ class ACD_solver:
                                 if root1 > 2**self.lenr:
                                     root1 = root1 - rp
                         roots.append(root1)
+        extended_groebner_time = time.clock() - start
         print "Found", len(roots), "correct roots."
         print "Same as original r's", set(roots) == set(self.r_list)
         if return_time:
