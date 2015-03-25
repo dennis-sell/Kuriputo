@@ -9,6 +9,35 @@ import itertools
 import time
 
 
+def gen_index(t,k,m):
+    if t==1:
+        return [tuple([0]*(m-i)+[1]+[0]*i) for i in range(m+1)]
+    else:
+        # Must optimize this shit
+        """
+        rows = [tuple([0]*(m+1))]
+        last_row = list(rows)
+        new_rows = []
+        # At each step, we generate all indices with a sum which is one higher.
+        for row_sum in range(t):
+            for index in last_row:
+                for x in range(m+1):
+                    # Increments index at position x by 1
+                    inc_index = index[0:x-1] + (index[x]+1,) + index[x+1:m+1]
+                    rows.append(inc_index)
+                    new_rows.append(inc_index)
+            last_rows = new_rows
+            new_rows = []
+
+        return rows
+        """
+        rows = []
+        for indices in itertools.product(range(t+1),repeat=self.m):
+            if sum(indices) < t+1:
+                rows.append(tuple(list(indices)+[max(0,k-sum(indices))]))
+        return rows
+
+
 class ACD_solver:
     def __init__(self, m, lenn, lenp, lenr):
         self.m = m
@@ -61,21 +90,11 @@ class ACD_solver:
         else:
             return B, getf
 
-
     def gen_lattice(self, t, k):
         variables = self.R.gens()
         f_list = [a - self.X * x for a, x in zip(self.a_list, variables)]
 
-        def gen_index():
-            if t==1:
-                for i in range(self.m+1):
-                    yield tuple([0]*(self.m-i)+[1]+[0]*i)
-            else:
-                for indices in itertools.product(range(t+1),repeat=self.m):
-                    if sum(indices) < t+1:
-                        yield tuple(list(indices)+[max(0,k-sum(indices))])
-
-        indices = list(gen_index())
+        indices = gen_index(t,k,self.m)
         dim = len(indices)
         functions = f_list + [self.N]
         pindex = [prod(map(operator.pow, functions, exponents)) for exponents in indices]
