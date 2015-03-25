@@ -69,19 +69,19 @@ class ACD_solver:
 
     def solve(self, t, k, use_magma=False, return_times=False):
         print "Generating lattice",
-        start = time.clock()
+        start = time.time()
         A,getf = self.gen_lattice(t,k)
         if use_magma:
             A = magma(A)
-        generating_time = time.clock()-start
+        generating_time = time.time()-start
         print generating_time
 
         print "Running LLL",
-        start = time.clock()
+        start = time.time()
         B = A.LLL()
         if use_magma:
             B = B.sage()
-        LLL_time = time.clock()-start
+        LLL_time = time.time()-start
         print LLL_time
 
         self.check(B, getf)
@@ -172,9 +172,9 @@ class ACD_solver:
            algorithm = 'magma:GroebnerBasis'
         I = (tuple(getf(B,i) for i in range(basis_size)))*R
         print "groebner basis:",
-        start = time.clock()
+        start = time.time()
         J = I.groebner_basis(algorithm)
-        groebner_time = time.clock()-start
+        groebner_time = time.time()-start
         print groebner_time
 
         roots = []
@@ -192,7 +192,7 @@ class ACD_solver:
                                 if root1 > 2**self.lenr:
                                     root1 = root1 - rp
                         roots.append(root1)
-        extended_groebner_time = time.clock() - start
+        extended_groebner_time = time.time() - start
         print "Found", len(roots), "correct roots."
         print "Same as original r's", set(roots) == set(self.r_list)
         if return_time:
