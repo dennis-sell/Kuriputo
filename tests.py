@@ -1,9 +1,5 @@
 from ACD import *
 
-u = univariate_acd_solver(100, 65, 10)
-r = u.howgrave_graham(3, 2)
-
-
 
 def test_tk(k, t, lenn, lenp, lenr, trials):
     successes = 0
@@ -56,7 +52,7 @@ def run_tests():
         (6,1000,200,115,3,2),
         (6,1000,400,297,3,2),
 
-        (7,1000,200,122,3,2),
+        (7,1000,200,120,3,2),
         (7,1000,400,311,3,2),
 
         (12,1000,400,347,1,1),
@@ -80,5 +76,6 @@ def run_tests():
         time_results.append((generating_time, LLL_time, gtime))
     print time_results
 
-#run_tests()
-CLT_toy()
+if __name__=="__main__":
+    run_tests()
+    #CLT_toy()

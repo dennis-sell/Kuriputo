@@ -32,7 +32,7 @@ def gen_index(t,k,m):
         return rows
         """
         rows = []
-        for indices in itertools.product(range(t+1),repeat=self.m):
+        for indices in itertools.product(range(t+1),repeat=m):
             if sum(indices) < t+1:
                 rows.append(tuple(list(indices)+[max(0,k-sum(indices))]))
         return rows
