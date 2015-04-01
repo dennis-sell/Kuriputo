@@ -39,7 +39,8 @@ def gen_index(t,k,m):
 
 
 class ACD_solver:
-    def __init__(self, m, lenn, lenp, lenr):
+    def __init__(self, m, lenn, lenp, lenr, verbose=False):
+        self.verbose = verbose
         self.m = m
         self.lenn = lenn
         self.lenp = lenp
@@ -59,36 +60,43 @@ class ACD_solver:
     def find_roots(self):
         t, k, dim = self.find_tk(rangelim=40, dimlim=2000)
         if not t and not k:
-            print "Not solvable or dimension too large"
+            if self.verbose:
+                print "Not solvable or dimension too large"
             return []
-        print "Lattice (t, k, dim) =", t, k, dim
+        if self.verbose:
+            print "Lattice (t, k, dim) =", t, k, dim
         B, getf = self.solve(t, k)
         roots = self.groebner(B, getf)
         return roots
 
 
     def solve(self, t, k, use_magma=False, return_times=False):
-        print "Generating lattice",
+        if self.verbose:
+            print "Generating lattice",
         start = time.time()
         A,getf = self.gen_lattice(t,k)
         if use_magma:
             A = magma(A)
         generating_time = time.time()-start
-        print generating_time
+        if self.verbose:
+            print generating_time
 
-        print "Running LLL",
+        if self.verbose:
+            print "Running LLL",
         start = time.time()
         B = A.LLL()
         if use_magma:
             B = B.sage()
         LLL_time = time.time()-start
-        print LLL_time
+        if self.verbose:
+            print LLL_time
 
         self.check(B, getf)
         if return_times:
             return B, getf, (generating_time, LLL_time)
         else:
             return B, getf
+
 
     def gen_lattice(self, t, k):
         variables = self.R.gens()
@@ -132,20 +140,21 @@ class ACD_solver:
             dim = binomial(test_t+self.m,self.m)
             if dim > dimlim:
                 continue
-            if self.check_tk(test_t,test_k,lllfactor,verbose=False):
+            if self.check_tk(test_t,test_k,lllfactor):
                 k = test_k
                 t = test_t
                 dimlim = dim
         return t,k,dimlim
 
-    def check_tk(self, test_t, test_k, lllfactor=log(1.01)/log(2), verbose=True):
+
+    def check_tk(self, test_t, test_k, lllfactor=log(1.01)/log(2)):
         dim = binomial(test_t+self.m,self.m)
         veclen = (log(dim)/(2*log(2)) +
                   dim*lllfactor +
                   (self.lenr*dim*test_t*self.m/(self.m+1)
                     + self.lenn*binomial(test_k+self.m,self.m)*test_k/(self.m+1))
                         /dim)
-        if verbose:
+        if self.verbose:
             print dim, float(veclen), self.lenp*test_k, bool(veclen < self.lenp*test_k)
         return bool(veclen < self.lenp*test_k)
 
@@ -153,7 +162,8 @@ class ACD_solver:
     """ Checks that each r is a root of the polynomial """
     def check(self, B, getf):
         if any([apply(getf(B, i), self.r_list) for i in range(self.m)]):
-            print "Failed: Polynomials do not vanish at roots."
+            if self.verbose:
+                print "Failed: Polynomials do not vanish at roots."
             return False
         return True
 
@@ -171,11 +181,13 @@ class ACD_solver:
            R = PolynomialRing(GF(rp),self.m,'x',order='lex')
            algorithm = 'magma:GroebnerBasis'
         I = (tuple(getf(B,i) for i in range(basis_size)))*R
-        print "groebner basis:",
+        if self.verbose:
+            print "groebner basis:",
         start = time.time()
         J = I.groebner_basis(algorithm)
         groebner_time = time.time()-start
-        print groebner_time
+        if self.verbose:
+            print groebner_time
 
         roots = []
         for b in J:
@@ -193,8 +205,9 @@ class ACD_solver:
                                     root1 = root1 - rp
                         roots.append(root1)
         extended_groebner_time = time.time() - start
-        print "Found", len(roots), "correct roots."
-        print "Same as original r's", set(roots) == set(self.r_list)
+        if self.verbose:
+            print "Found", len(roots), "correct roots."
+            print "Same as original r's", set(roots) == set(self.r_list)
         if return_time:
             return roots, groebner_time
         else:
