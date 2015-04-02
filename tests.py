@@ -1,4 +1,10 @@
+import csv
+import sys
+
 from ACD import *
+
+def printe(x):
+    sys.stderr.write(str(x))
 
 
 def test_tk(k, t, lenn, lenp, lenr, trials):
@@ -15,54 +21,69 @@ def test_tk(k, t, lenn, lenp, lenr, trials):
     print success_ratio
     return success_ratio
 
-def run_tests_2():
-    pass
+test_params = [
+    (1,1000,200,36,41,8),
+    (1,1000,400,154,40,16),
+    (1,1000,400,156,82,33),
+
+    (2,1000,200,72,9,4),
+    (2,1000,400,232,10,6),
+    (2,1999,400,238,15,9),
+
+    (3,1000,200,87,5,3),
+    (3,1000,400,255,4,3),
+    (3,1000,400,268,7,5),
+
+    (4,1000,200,94,3,2),
+    (4,1000,400,279,4,3),
+
+    (5,1000,200,108,3,2),
+    (5,1000,200,110,4,3),
+    (5,1000,400,278,3,2),
+
+    (6,1000,200,115,3,2),
+    (6,1000,400,297,3,2),
+
+    (7,1000,200,120,3,2),
+    (7,1000,400,311,3,2),
+
+    (12,1000,400,347,1,1),
+    (18,1000,400,364,1,1),
+    (24,1000,400,372,1,1),
+    (48,1000,400,383,1,1),
+    (96,1000,400,387,1,1)]
+
+
+def run_tests_2(filename):
     # Find minimal k,t at which this will work
     # Run that lattice
     # Compare it to higher values.
-
     # Question: Is it optimal for the minimal t for the minimal k for which it will work?
+
+    fieldnames = ["m","logn","logp","logr","t","k","dim",
+                    "generating_time","LLL_time","gtime"]
+    writer = csv.writer(open(filename, "wb"))
+    for m,logn,logp,logr,_,_ in test_params[:2]:
+        hulk = ACD_solver(m,logn,logp,logr)
+        tks = hulk.find_all_tk(rangelim=50)
+        printe(tks)
+        for t, k, dim in tks:
+            B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
+                                                        use_magma=True,
+                                                        return_times=True)
+            _, gtime = hulk.groebner(B, getf, 0, use_magma=True, return_time=True)
+            writer.writerow((m,logn,logp,logr,t,k,dim,generating_time, LLL_time, gtime))
+
+
 
 def CLT_toy():
     params = (10,290000,988,26)
-    acd = ACD_solver(*params)
+    acd = ACD_solver(*params, verbose=True)
     acd.find_roots()
 
 def run_tests():
-    tests = [
-        (1,1000,200,36,41,8),
-        (1,1000,400,154,40,16),
-        (1,1000,400,156,82,33),
-
-        (2,1000,200,72,9,4),
-        (2,1000,400,232,10,6),
-        (2,1999,400,238,15,9),
-
-        (3,1000,200,87,5,3),
-        (3,1000,400,255,4,3),
-        (3,1000,400,268,7,5),
-
-        (4,1000,200,94,3,2),
-        (4,1000,400,279,4,3),
-
-        (5,1000,200,108,3,2),
-        (5,1000,200,110,4,3),
-        (5,1000,400,278,3,2),
-
-        (6,1000,200,115,3,2),
-        (6,1000,400,297,3,2),
-
-        (7,1000,200,120,3,2),
-        (7,1000,400,311,3,2),
-
-        (12,1000,400,347,1,1),
-        (18,1000,400,364,1,1),
-        (24,1000,400,372,1,1),
-        (48,1000,400,383,1,1),
-        (96,1000,400,387,1,1)]
-
     time_results = []
-    for m,logn,logp,logr,t,k in tests:
+    for m,logn,logp,logr,t,k in test_params:
         print m, logn, logp, logr
         hulk = ACD_solver(m,logn,logp,logr)
         print t, k, binomial(t+m,m)
@@ -74,8 +95,8 @@ def run_tests():
         print generating_time, LLL_time, gtime
         print
         time_results.append((generating_time, LLL_time, gtime))
-    print time_results
+    return time_results
 
 if __name__=="__main__":
-    run_tests()
-    #CLT_toy()
+    print run_tests()
+    #print CLT_toy()

@@ -130,6 +130,22 @@ class ACD_solver:
         return RR((v_m_norm / (det ** (1/dim))) ** (1/dim))
 
 
+    # Returns all t and k (and the dimension)
+    # which will work and which satisfy the dimension limit
+    def find_all_tk(self, rangelim=20, dimlim=200, lllfactor=log(1.01)/log(2), lenr=0):
+        if lenr == 0:
+            lenr = self.lenr
+
+        tkdims = []
+        for test_k,test_t in itertools.product(range(1,rangelim),repeat=2):
+            if test_k > test_t:
+                continue
+            dim = binomial(test_t+self.m,self.m)
+            if self.check_tk(test_t,test_k,lllfactor):
+                tkdims.append((test_t,test_k,dim))
+        return tkdims
+
+
     def find_tk(self, rangelim=20, dimlim = 200, lllfactor=log(1.01)/log(2), lenr=0):
         t,k=0,0
         if lenr == 0:
