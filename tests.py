@@ -1,10 +1,11 @@
 import csv
 import sys
+import time
 
 from ACD import *
 
 def printe(x):
-    sys.stderr.write(str(x))
+    sys.stderr.write(str(x) + "\n")
 
 
 def test_tk(k, t, lenn, lenp, lenr, trials):
@@ -54,18 +55,21 @@ test_params = [
     (96,1000,400,387,1,1)]
 
 
-def run_tests_2(filename):
+def run_tests_2(filename, test_params=test_params, tk_limit=10):
     # Find minimal k,t at which this will work
     # Run that lattice
     # Compare it to higher values.
     # Question: Is it optimal for the minimal t for the minimal k for which it will work?
 
+    start_time = time.time()
     fieldnames = ["m","logn","logp","logr","t","k","dim",
                     "generating_time","LLL_time","gtime"]
-    writer = csv.writer(open(filename, "wb"))
-    for m,logn,logp,logr,_,_ in test_params[:2]:
+    csv_file = open(filename, "wb")
+    writer = csv.writer(csv_file)
+    for m,logn,logp,logr,_,_ in test_params:
         hulk = ACD_solver(m,logn,logp,logr)
         tks = hulk.find_all_tk(rangelim=50)
+        tks = sorted(tks, key=lambda (t,k,d): d)[:tk_limit]
         printe(tks)
         for t, k, dim in tks:
             B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
@@ -73,6 +77,8 @@ def run_tests_2(filename):
                                                         return_times=True)
             _, gtime = hulk.groebner(B, getf, 0, use_magma=True, return_time=True)
             writer.writerow((m,logn,logp,logr,t,k,dim,generating_time, LLL_time, gtime))
+    print "time:", time.time() - start_time
+    csv_file.close()
 
 
 

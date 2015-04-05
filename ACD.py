@@ -141,6 +141,8 @@ class ACD_solver:
             if test_k > test_t:
                 continue
             dim = binomial(test_t+self.m,self.m)
+            if dim > dimlim:
+                continue
             if self.check_tk(test_t,test_k,lllfactor):
                 tkdims.append((test_t,test_k,dim))
         return tkdims
