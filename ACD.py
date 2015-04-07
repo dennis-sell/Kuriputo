@@ -91,7 +91,6 @@ class ACD_solver:
         if self.verbose:
             print LLL_time
 
-        self.check(B, getf)
         if return_times:
             return B, getf, (generating_time, LLL_time)
         else:
@@ -165,14 +164,14 @@ class ACD_solver:
         return t,k,dimlim
 
 
-    def check_tk(self, test_t, test_k, lllfactor=log(1.01)/log(2)):
+    def check_tk(self, test_t, test_k, lllfactor=log(1.01)/log(2),verbose=False):
         dim = binomial(test_t+self.m,self.m)
         veclen = (log(dim)/(2*log(2)) +
                   dim*lllfactor +
                   (self.lenr*dim*test_t*self.m/(self.m+1)
                     + self.lenn*binomial(test_k+self.m,self.m)*test_k/(self.m+1))
                         /dim)
-        if self.verbose:
+        if verbose:
             print dim, float(veclen), self.lenp*test_k, bool(veclen < self.lenp*test_k)
         return bool(veclen < self.lenp*test_k)
 
@@ -225,12 +224,14 @@ class ACD_solver:
         extended_groebner_time = time.time() - start
         if self.verbose:
             print "Found", len(roots), "correct roots."
-            print "Same as original r's", set(roots) == set(self.r_list)
+            print "Same as original r's", self.correct_roots(roots)
         if return_time:
             return roots, groebner_time
         else:
             return roots
 
+    def correct_roots(self, roots):
+        return set(roots) == set(self.r_list)
 
 
 class univariate_acd_solver:

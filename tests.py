@@ -22,6 +22,7 @@ def test_tk(k, t, lenn, lenp, lenr, trials):
     print success_ratio
     return success_ratio
 
+
 test_params = [
     (1,1000,200,36,41,8),
     (1,1000,400,154,40,16),
@@ -68,18 +69,22 @@ def run_tests_2(filename, test_params=test_params, tk_limit=10):
     writer = csv.writer(csv_file)
     for m,logn,logp,logr,_,_ in test_params:
         hulk = ACD_solver(m,logn,logp,logr)
+
         tks = hulk.find_all_tk(rangelim=50)
         tks = sorted(tks, key=lambda (t,k,d): d)[:tk_limit]
         printe(tks)
+
         for t, k, dim in tks:
             B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
                                                         use_magma=True,
                                                         return_times=True)
-            _, gtime = hulk.groebner(B, getf, 0, use_magma=True, return_time=True)
-            writer.writerow((m,logn,logp,logr,t,k,dim,generating_time, LLL_time, gtime))
+            roots, gtime = hulk.groebner(B, getf, 2, use_magma=True, return_time=True)
+            success = hulk.correct_roots(roots)
+
+            writer.writerow((m, logn, logp, logr, t, k, dim,
+                                generating_time, LLL_time, gtime, success))
     print "time:", time.time() - start_time
     csv_file.close()
-
 
 
 def CLT_toy():
