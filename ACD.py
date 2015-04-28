@@ -79,7 +79,7 @@ class ACD_solver:
 
 
     def find_roots(self):
-        t, k, dim = self.find_tk(rangelim=40, dimlim=2000)
+        t, k, dim = self.find_tk(rangelim=20, dimlim=200)
         if not t and not k:
             if self.verbose:
                 print "Not solvable or dimension too large"
@@ -158,6 +158,17 @@ class ACD_solver:
         # Not sure I'll get back to this later
         return RR((v_m_norm / (det ** (1/dim))) ** (1/dim))
 
+
+    def vector_bound(self,t,k):
+        B, getf = self.gen_lattice(t,k)
+        dim = B.nrows()
+        det = B.det()
+        vector_bound = RR(
+                pow(dim, 1/2) *
+                pow(2,dim/4) *
+                pow(det, 1/(dim + 1 - self.m))
+            )
+        return vector_bound
 
     # Returns all t and k (and the dimension)
     # which will work and which satisfy the dimension limit
