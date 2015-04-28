@@ -64,7 +64,8 @@ def run_tests_2(filename, test_params=test_params, tk_limit=10):
 
     start_time = time.time()
     fieldnames = ["m","logn","logp","logr","t","k","dim",
-                    "generating_time","LLL_time","gtime"]
+                    "generating_time","LLL_time","gtime",
+                    "success","use_rounding"]
     csv_file = open(filename, "wb")
     writer = csv.writer(csv_file)
     for m,logn,logp,logr,_,_ in test_params:
@@ -75,14 +76,18 @@ def run_tests_2(filename, test_params=test_params, tk_limit=10):
         printe(tks)
 
         for t, k, dim in tks:
-            B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
-                                                        use_magma=True,
-                                                        return_times=True)
-            roots, gtime = hulk.groebner(B, getf, 2, use_magma=True, return_time=True)
-            success = hulk.correct_roots(roots)
+            for rounding_const in [None, 2, 8]:
+                B,getf,(generating_time, LLL_time) = \
+                        hulk.solve(t, k,
+                                   use_magma=True,
+                                   return_times=True,
+                                   rounding_const=rounding_const)
+                roots, gtime = hulk.groebner(B, getf, 2, use_magma=True, return_time=True)
+                success = hulk.correct_roots(roots)
 
-            writer.writerow((m, logn, logp, logr, t, k, dim,
-                                generating_time, LLL_time, gtime, success))
+                writer.writerow((m, logn, logp, logr, t, k, dim,
+                                 generating_time, LLL_time, gtime,
+                                 success, rounding_const))
     print "time:", time.time() - start_time
     csv_file.close()
 
