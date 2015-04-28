@@ -37,6 +37,27 @@ def gen_index(t,k,m):
                 rows.append(tuple(list(indices)+[max(0,k-sum(indices))]))
         return rows
 
+# Size reduces the matrix without changing the diagonal elements.
+def size_reduce(B):
+    """
+    Can probably assume that all entries above the diagonal are 0.
+    """
+    B = matrix(B)
+    for i in range(1, B.nrows()):
+        previous_row = B[i-1]
+        row = B[i]
+        while RR(norm(row - previous_row)) < RR(norm(row)):
+            row = row - previous_row
+        B[i] = row
+    return B
+
+def LLL_round(B, rounding_const):
+    B = size_reduce(B)
+    min_element = min(abs(d) for d in B.diagonal())
+    B = B * rounding_const / min_element
+    B.apply_map(floor)
+    return B
+
 
 class ACD_solver:
     def __init__(self, m, lenn, lenp, lenr, verbose=False):
@@ -65,22 +86,31 @@ class ACD_solver:
             return []
         if self.verbose:
             print "Lattice (t, k, dim) =", t, k, dim
-        B, getf = self.solve(t, k)
+        B, getf = self.solve(t, k, rounding_const=2)
         roots = self.groebner(B, getf)
         return roots
 
 
-    def solve(self, t, k, use_magma=False, return_times=False):
+    def solve(self, t, k,
+                    use_magma=False,
+                    return_times=False,
+                    rounding_const=None):
+        ## Lattice Generation
         if self.verbose:
             print "Generating lattice",
         start = time.time()
+
         A,getf = self.gen_lattice(t,k)
+        if rounding_const:
+            A = LLL_round(A,rounding_const)
         if use_magma:
             A = magma(A)
+
         generating_time = time.time()-start
         if self.verbose:
             print generating_time
 
+        ## Lattice Reduction
         if self.verbose:
             print "Running LLL",
         start = time.time()
