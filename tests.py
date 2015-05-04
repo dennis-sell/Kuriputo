@@ -23,7 +23,7 @@ def test_tk(k, t, lenn, lenp, lenr, trials):
     return success_ratio
 
 
-test_params = [
+nadia_test_params = [
     (1,1000,200,36,41,8),
     (1,1000,400,154,40,16),
     (1,1000,400,156,82,33),
@@ -55,8 +55,34 @@ test_params = [
     (48,1000,400,383,1,1),
     (96,1000,400,387,1,1)]
 
+def run_tests_3(filename, test_param=nadia_test_params[0], tks=None):
+    m,logn,logp,logr,_,_ = test_param
+    hulk = ACD_solver(m,logn,logp,logr)
+    if not tks:
+        tks = hulk.find_all_tk(rangelim=30)
+        tks.sort(key=lambda (t,k,d): d)
 
-def run_tests_2(filename, test_params=test_params, tk_limit=10):
+    fieldnames = ["m","logn","logp","logr","t","k","dim",
+                    "generating_time","LLL_time","gtime",
+                    "success","vector_bound"]
+    csv_file = open(filename, "wb")
+    writer = csv.writer(csv_file)
+
+    for t, k, dim in tks:
+        B,getf,(generating_time, LLL_time) = \
+                hulk.solve(t, k,
+                           use_magma=True,
+                           return_times=True)
+        roots, gtime = hulk.groebner(B, getf, 2, use_magma=True, return_time=True)
+        success = hulk.correct_roots(roots)
+        vector_bound = hulk.vector_bound(t,k)
+
+        writer.writerow((m, logn, logp, logr, t, k, dim,
+                         generating_time, LLL_time, gtime,
+                         success, vector_bound))
+
+
+def run_tests_2(filename, test_params=nadia_test_params, tk_limit=10):
     # Find minimal k,t at which this will work
     # Run that lattice
     # Compare it to higher values.
@@ -99,7 +125,7 @@ def CLT_toy():
 
 def run_tests():
     time_results = []
-    for m,logn,logp,logr,t,k in test_params:
+    for m,logn,logp,logr,t,k in nadia_test_params:
         print m, logn, logp, logr
         hulk = ACD_solver(m,logn,logp,logr)
         print t, k, binomial(t+m,m)
