@@ -59,6 +59,21 @@ def LLL_round(B, rounding_const):
     return B
 
 
+def stupid_pow(base, denom):
+    # calculates base^(1/denom)
+    lo = 0
+    hi = base
+    while lo < hi - 1:
+        mid = (lo+hi)//2
+        power = mid**denom
+        if power > base:
+            hi = mid
+        elif power < base:
+            lo = mid
+        else:
+            return mid
+    return hi
+
 class ACD_solver:
     def __init__(self, m, lenn, lenp, lenr, verbose=False):
         self.verbose = verbose
@@ -166,7 +181,8 @@ class ACD_solver:
         vector_bound = RR(
                 pow(dim, 1/2) *
                 pow(2,dim/4) *
-                pow(det, 1/(dim + 1 - self.m))
+                stupid_pow(det, dim + 1 - self.m)
+                #pow(det, 1/(dim + 1 - self.m))
             )
         return vector_bound
 
