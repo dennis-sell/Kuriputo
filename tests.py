@@ -73,13 +73,14 @@ def run_tests_3(filename, test_param=nadia_test_params[0], tks=None):
                 hulk.solve(t, k,
                            use_magma=True,
                            return_times=True)
-        roots, gtime = hulk.groebner(B, getf, 2, use_magma=True, return_time=True)
+        roots, gtime = hulk.groebner(B, getf, use_magma=True, return_time=True)
         success = hulk.correct_roots(roots)
         vector_bound = hulk.vector_bound(t,k)
 
         writer.writerow((m, logn, logp, logr, t, k, dim,
                          generating_time, LLL_time, gtime,
                          success, vector_bound))
+    csv_file.close()
 
 
 def run_tests_2(filename, test_params=nadia_test_params, tk_limit=10):
