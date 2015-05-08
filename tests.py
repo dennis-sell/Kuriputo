@@ -59,7 +59,7 @@ def run_tests_3(filename, test_param=nadia_test_params[0], tks=None):
     m,logn,logp,logr,_,_ = test_param
     hulk = ACD_solver(m,logn,logp,logr)
     if not tks:
-        tks = hulk.find_all_tk(rangelim=30)
+        tks = hulk.find_all_tk()
         tks.sort(key=lambda (t,k,d): d)
 
     fieldnames = ["m","logn","logp","logr","t","k","dim",
@@ -67,6 +67,7 @@ def run_tests_3(filename, test_param=nadia_test_params[0], tks=None):
                     "success","vector_bound"]
     csv_file = open(filename, "wb")
     writer = csv.writer(csv_file)
+    writer.writerow(tuple(fieldnames))
 
     for t, k, dim in tks:
         B,getf,(generating_time, LLL_time) = \

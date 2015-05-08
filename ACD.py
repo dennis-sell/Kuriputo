@@ -182,7 +182,9 @@ class ACD_solver:
                 pow(dim, 1/2) *
                 pow(2,dim/4) *
                 stupid_pow(det, dim + 1 - self.m)
-                #pow(det, 1/(dim + 1 - self.m))
+                #same as: pow(det, 1/(dim + 1 - self.m))
+                # but rounded to nearest integer.
+                # This method is much faster (Runs in log(det)^2)
             )
         return vector_bound
 
