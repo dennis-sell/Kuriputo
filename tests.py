@@ -55,6 +55,35 @@ nadia_test_params = [
     (48,1000,400,383,1,1),
     (96,1000,400,387,1,1)]
 
+def run_tests_4(filename, rounding_consts, test_params=nadia_test_params):
+
+    fieldnames = ["m","logn","logp","logr","t","k","dim",
+                    "generating_time","LLL_time","gtime",
+                    "rounding_const","success"]
+    csv_file = open(filename, "wb")
+    writer = csv.writer(csv_file)
+    writer.writerow(tuple(fieldnames))
+
+    for m,logn,logp,logr,t,k in test_params:
+        print m, logn, logp, logr
+        hulk = ACD_solver(m,logn,logp,logr)
+        for rounding_const in rounding_consts:
+            B,getf,(generating_time, LLL_time) = hulk.solve(t, k,
+                                                        use_magma=True,
+                                                        rounding_const=rounding_const,
+                                                        return_times=True)
+
+            roots, gtime = hulk.groebner(B, getf, use_magma=True, return_time=True)
+
+            success = hulk.correct_roots(roots)
+            dim = binomial(t+m,m)
+
+            writer.writerow((m, logn, logp, logr, t, k, dim,
+                             generating_time, LLL_time, gtime,
+                             rounding_const, success))
+    csv_file.close()
+
+
 def run_tests_3(filename, test_param=nadia_test_params[0], tks=None):
     m,logn,logp,logr,_,_ = test_param
     hulk = ACD_solver(m,logn,logp,logr)
