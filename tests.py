@@ -59,7 +59,7 @@ def run_tests_4(filename, rounding_consts, test_params=nadia_test_params):
 
     fieldnames = ["m","logn","logp","logr","t","k","dim",
                     "generating_time","LLL_time","gtime",
-                    "rounding_const","success"]
+                    "rounding_const","log_det","success"]
     csv_file = open(filename, "wb")
     writer = csv.writer(csv_file)
     writer.writerow(tuple(fieldnames))
@@ -75,12 +75,13 @@ def run_tests_4(filename, rounding_consts, test_params=nadia_test_params):
 
             roots, gtime = hulk.groebner(B, getf, use_magma=True, return_time=True)
 
-            success = hulk.correct_roots(roots)
             dim = binomial(t+m,m)
+            success = hulk.correct_roots(roots)
+            log_det = RR(log(B.det()))
 
             writer.writerow((m, logn, logp, logr, t, k, dim,
                              generating_time, LLL_time, gtime,
-                             rounding_const, success))
+                             rounding_const, log_det, success))
     csv_file.close()
 
 
